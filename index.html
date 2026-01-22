@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Der Satz-Baumeister: Weil & Trennbare Verben</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f1f5f9;
+            /* Patrón sutil */
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        h1, h2, .german-font {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+        }
+        
+        /* Animaciones */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .word-card {
+            transition: all 0.2s ease;
+            animation: popIn 0.3s ease-out forwards;
+            user-select: none;
+            cursor: pointer;
+        }
+        
+        .word-card:active {
+            transform: scale(0.95);
+        }
+
+        .shake-animation {
+            animation: shake 0.4s ease-in-out;
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+        }
+
+        .success-animation {
+            background-color: #dcfce7 !important;
+            border-color: #22c55e !important;
+            color: #15803d !important;
+        }
+
+        /* Estilo Bandera Alemana */
+        .german-border-bottom {
+            border-bottom: 8px solid;
+            border-image: linear-gradient(to right, #000 33%, #DD0000 33%, #DD0000 66%, #FFCC00 66%) 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-3xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden german-border-bottom relative">
+        
+        <!-- Header -->
+        <header class="bg-slate-900 text-white p-6 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-black via-red-600 to-yellow-500"></div>
+            <h1 class="text-4xl font-bold tracking-wider text-yellow-400 mb-2">DER SATZ-BAUMEISTER</h1>
+            <p class="text-slate-300 text-sm tracking-widest">CONSTRUCTOR DE ORACIONES A2</p>
+            
+            <!-- Barra de Progreso -->
+            <div class="mt-6 flex justify-between items-center text-xs font-bold text-slate-400 px-4">
+                <span id="level-indicator">LEVEL 1: WEIL BASIS</span>
+                <span>SCORE: <span id="score" class="text-white text-lg ml-1">0</span></span>
+            </div>
+            <div class="w-full bg-slate-700 h-2 rounded-full mt-2 mx-auto max-w-md">
+                <div id="progress-bar" class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </header>
+
+        <!-- Área de Juego -->
+        <main class="p-8">
+            
+            <!-- Pantalla de Inicio -->
+            <div id="start-screen" class="text-center py-10">
+                <div class="text-6xl mb-6 text-yellow-500"><i class="fa-solid fa-puzzle-piece"></i></div>
+                <h2 class="text-3xl font-bold text-slate-800 mb-4">¿Listo para construir?</h2>
+                <p class="text-slate-600 mb-8 text-lg">Ordena las palabras correctamente. <br>¡Cuidado con la posición del verbo!</p>
+                <button onclick="startGame()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-xl transition transform hover:scale-105 shadow-lg">
+                    STARTEN <i class="fa-solid fa-play ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Pantalla de Juego -->
+            <div id="game-screen" class="hidden">
+                <!-- Contexto / Pista -->
+                <div class="mb-8 text-center">
+                    <span id="level-badge" class="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-bold mb-2 tracking-wide uppercase">Nivel 1</span>
+                    <p class="text-slate-500 text-sm mb-1 uppercase tracking-wide">Oración Principal (Hauptsatz):</p>
+                    <h3 id="context-sentence" class="text-2xl font-bold text-slate-800 bg-slate-100 p-4 rounded-lg border-l-4 border-slate-800 inline-block min-w-[300px]">
+                        Ich lerne Deutsch...
+                    </h3>
+                </div>
+
+                <!-- Área de Respuesta (Drop Zone simulada) -->
+                <div class="min-h-[80px] bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-4 flex flex-wrap gap-2 justify-center items-center mb-8 transition-colors" id="answer-area">
+                    <span class="text-slate-400 text-sm pointer-events-none italic" id="placeholder-text">Toca las palabras abajo para construir la frase...</span>
+                </div>
+
+                <!-- Banco de Palabras -->
+                <div id="word-bank" class="flex flex-wrap gap-3 justify-center mb-8">
+                    <!-- Las palabras se generan aquí -->
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex justify-center gap-4">
+                    <button onclick="resetCurrentSentence()" class="px-4 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition">
+                        <i class="fa-solid fa-rotate-left mr-2"></i> Reiniciar
+                    </button>
+                    <button onclick="checkAnswer()" id="check-btn" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed">
+                        PRÜFEN (Check)
+                    </button>
+                </div>
+                
+                <!-- Feedback -->
+                <div id="feedback-msg" class="mt-4 text-center h-8 font-bold text-lg transition-all opacity-0"></div>
+            </div>
+
+            <!-- Pantalla Final -->
+            <div id="end-screen" class="hidden text-center py-10">
+                <div class="text-6xl mb-6 text-green-500 animate-bounce"><i class="fa-solid fa-trophy"></i></div>
+                <h2 class="text-4xl font-bold text-slate-800 mb-2">GUT GEMACHT!</h2>
+                <p class="text-slate-600 mb-6 text-xl">Has completado el entrenamiento.</p>
+                <div class="bg-slate-100 p-6 rounded-xl max-w-sm mx-auto mb-8">
+                    <p class="text-sm text-slate-500 uppercase tracking-wide">Puntuación Final</p>
+                    <p class="text-4xl font-bold text-slate-900"><span id="final-score">0</span> / <span id="max-score">0</span></p>
+                </div>
+                <button onclick="location.reload()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-full text-xl transition shadow-lg">
+                    NOCH EINMAL (Otra vez)
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // DATOS DEL JUEGO
+        const levels = [
+            {
+                id: 1,
+                name: "LEVEL 1: WEIL BASIS",
+                color: "bg-yellow-100 text-yellow-800",
+                description: "Ordena la frase con Weil. ¡Verbo al final!",
+                sentences: [
+                    {
+                        context: "Ich gehe ins Bett, ...",
+                        correct: ["weil", "ich", "müde", "bin"],
+                        scrambled: ["bin", "weil", "müde", "ich"]
+                    },
+                    {
+                        context: "Er isst eine Pizza, ...",
+                        correct: ["weil", "er", "Hunger", "hat"],
+                        scrambled: ["hat", "er", "weil", "Hunger"]
+                    },
+                    {
+                        context: "Wir bleiben zu Hause, ...",
+                        correct: ["weil", "es", "heute", "regnet"],
+                        scrambled: ["regnet", "es", "weil", "heute"]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                name: "LEVEL 2: TRENNBARE VERBEN",
+                color: "bg-green-100 text-green-800",
+                description: "Oraciones normales. ¡El prefijo se separa!",
+                sentences: [
+                    {
+                        context: "Hauptsatz (Normal):",
+                        correct: ["Ich", "rufe", "meine", "Mutter", "an"],
+                        scrambled: ["an", "rufe", "Ich", "Mutter", "meine"]
+                    },
+                    {
+                        context: "Hauptsatz (Normal):",
+                        correct: ["Wir", "kaufen", "im", "Supermarkt", "ein"],
+                        scrambled: ["ein", "kaufen", "Wir", "Supermarkt", "im"]
+                    },
+                    {
+                        context: "Hauptsatz (Normal):",
+                        correct: ["Er", "steht", "um", "sechs", "Uhr", "auf"],
+                        scrambled: ["auf", "steht", "Uhr", "Er", "sechs", "um"]
+                    }
+                ]
+            },
+            {
+                id: 3,
+                name: "LEVEL 3: FUSION (WEIL + TRENNBAR)",
+                color: "bg-red-100 text-red-800",
+                description: "El reto final. ¡Weil junta el verbo!",
+                sentences: [
+                    {
+                        context: "Ich kann nicht sprechen, ...",
+                        correct: ["weil", "ich", "dich", "anrufe"],
+                        scrambled: ["anrufe", "weil", "dich", "ich"]
+                    },
+                    {
+                        context: "Der Kühlschrank ist voll, ...",
+                        correct: ["weil", "wir", "heute", "einkaufen"],
+                        scrambled: ["einkaufen", "wir", "heute", "weil"]
+                    },
+                    {
+                        context: "Sie ist müde, ...",
+                        correct: ["weil", "sie", "früh", "aufsteht"],
+                        scrambled: ["aufsteht", "sie", "früh", "weil"]
+                    }
+                ]
+            }
+        ];
+
+        let currentLevelIndex = 0;
+        let currentSentenceIndex = 0;
+        let userBuild = [];
+        let score = 0;
+        let totalSentences = 0;
+
+        // Calcular total de oraciones para el score
+        levels.forEach(l => totalSentences += l.sentences.length);
+
+        // ELEMENTOS DOM
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const contextEl = document.getElementById('context-sentence');
+        const answerArea = document.getElementById('answer-area');
+        const wordBank = document.getElementById('word-bank');
+        const placeholder = document.getElementById('placeholder-text');
+        const levelIndicator = document.getElementById('level-indicator');
+        const levelBadge = document.getElementById('level-badge');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreEl = document.getElementById('score');
+        const feedbackEl = document.getElementById('feedback-msg');
+        const checkBtn = document.getElementById('check-btn');
+
+        // SONIDOS (Simulados visualmente por ahora para evitar problemas de audio)
+        
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            loadLevel();
+        }
+
+        function loadLevel() {
+            const level = levels[currentLevelIndex];
+            levelIndicator.textContent = level.name;
+            levelBadge.textContent = `NIVEL ${level.id}`;
+            levelBadge.className = `inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 tracking-wide uppercase ${level.color}`;
+            
+            loadSentence();
+        }
+
+        function loadSentence() {
+            const level = levels[currentLevelIndex];
+            const sentenceData = level.sentences[currentSentenceIndex];
+            
+            contextEl.textContent = sentenceData.context;
+            userBuild = [];
+            answerArea.innerHTML = '';
+            answerArea.appendChild(placeholder);
+            placeholder.style.display = 'block';
+            feedbackEl.style.opacity = '0';
+            checkBtn.disabled = false;
+            checkBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            // Render Word Bank
+            wordBank.innerHTML = '';
+            sentenceData.scrambled.forEach((word, index) => {
+                const btn = document.createElement('div');
+                btn.textContent = word;
+                btn.className = 'word-card bg-white border-2 border-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg shadow-sm hover:shadow-md hover:border-slate-400 hover:-translate-y-1 transition';
+                btn.onclick = () => selectWord(word, btn);
+                wordBank.appendChild(btn);
+            });
+
+            updateProgress();
+        }
+
+        function selectWord(word, btnElement) {
+            // Mover palabra al área de respuesta
+            userBuild.push(word);
+            
+            const answerToken = document.createElement('div');
+            answerToken.textContent = word;
+            answerToken.className = 'word-card bg-slate-800 text-white font-bold py-2 px-4 rounded-lg shadow-md cursor-pointer hover:bg-red-500 transition';
+            answerToken.onclick = () => returnWord(word, answerToken, btnElement);
+            
+            answerArea.appendChild(answerToken);
+            btnElement.style.display = 'none'; // Ocultar del banco
+            
+            placeholder.style.display = 'none';
+        }
+
+        function returnWord(word, tokenElement, originalBtn) {
+            // Devolver palabra al banco
+            const index = userBuild.indexOf(word);
+            if (index > -1) {
+                userBuild.splice(index, 1);
+            }
+            tokenElement.remove();
+            originalBtn.style.display = 'block';
+            
+            if (userBuild.length === 0) {
+                placeholder.style.display = 'block';
+            }
+        }
+
+        function resetCurrentSentence() {
+            userBuild = [];
+            const level = levels[currentLevelIndex];
+            const sentenceData = level.sentences[currentSentenceIndex];
+            
+            // Restaurar banco visualmente
+            const bankWords = wordBank.children;
+            for(let btn of bankWords) {
+                btn.style.display = 'block';
+            }
+            
+            // Limpiar área de respuesta
+            // Mantener el placeholder, borrar el resto
+            while (answerArea.children.length > 1) {
+                answerArea.lastChild.remove();
+            }
+            placeholder.style.display = 'block';
+            feedbackEl.style.opacity = '0';
+        }
+
+        function checkAnswer() {
+            const level = levels[currentLevelIndex];
+            const currentSentence = level.sentences[currentSentenceIndex];
+            const correctStr = currentSentence.correct.join(" ");
+            const userStr = userBuild.join(" ");
+
+            if (userStr === correctStr) {
+                // CORRECTO
+                handleSuccess();
+            } else {
+                // INCORRECTO
+                handleError();
+            }
+        }
+
+        function handleSuccess() {
+            feedbackEl.textContent = "Richtig! (¡Correcto!)";
+            feedbackEl.className = "mt-4 text-center h-8 font-bold text-lg text-green-600 opacity-100";
+            
+            // Animar tokens
+            const tokens = answerArea.querySelectorAll('div');
+            tokens.forEach(t => t.classList.add('success-animation'));
+
+            score += 10;
+            scoreEl.textContent = score;
+            checkBtn.disabled = true;
+            checkBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            setTimeout(() => {
+                nextSentence();
+            }, 1500);
+        }
+
+        function handleError() {
+            feedbackEl.textContent = "Falsch! Versuch es noch einmal. (Inténtalo de nuevo)";
+            feedbackEl.className = "mt-4 text-center h-8 font-bold text-lg text-red-500 opacity-100";
+            
+            // Shake effect
+            const tokens = answerArea.querySelectorAll('div');
+            tokens.forEach(t => {
+                t.classList.remove('shake-animation'); // reset
+                void t.offsetWidth; // trigger reflow
+                t.classList.add('shake-animation');
+            });
+        }
+
+        function nextSentence() {
+            currentSentenceIndex++;
+            
+            // Verificar si terminamos el nivel
+            if (currentSentenceIndex >= levels[currentLevelIndex].sentences.length) {
+                currentLevelIndex++;
+                currentSentenceIndex = 0;
+                
+                // Verificar si terminamos el juego
+                if (currentLevelIndex >= levels.length) {
+                    showEndScreen();
+                    return;
+                }
+                
+                // Mostrar transición de nivel o cargar directo
+                loadLevel();
+            } else {
+                loadSentence();
+            }
+        }
+
+        function updateProgress() {
+            let totalDone = 0;
+            for(let i=0; i < currentLevelIndex; i++) {
+                totalDone += levels[i].sentences.length;
+            }
+            totalDone += currentSentenceIndex;
+            
+            const percentage = (totalDone / totalSentences) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        function showEndScreen() {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('max-score').textContent = totalSentences * 10;
+        }
+
+    </script>
+</body>
+</html>

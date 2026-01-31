@@ -2,7 +2,7 @@
   "name": "nombre-de-tu-juego",
   "version": "0.0.0",
   
-  "homepage": "https://fcobonilla0902.github.io/Deutsch/", 
+  "homepage": "https://fcobonilla0902.github.io/Deutsch/index.html", 
 
   "scripts": {
     "dev": "vite",

@@ -40,10 +40,19 @@ function initFirebase() {
     });
     function finish() {
       try {
-        firebaseApp = window.firebase.initializeApp(FIREBASE_CONFIG);
-        db = window.firebase.database();
+        // Verificar si ya existe una app inicializada
+        if (window.firebase && window.firebase.apps && window.firebase.apps.length > 0) {
+          firebaseApp = window.firebase.apps[0];
+          db = window.firebase.database();
+        } else {
+          firebaseApp = window.firebase.initializeApp(FIREBASE_CONFIG);
+          db = window.firebase.database();
+        }
         resolve(db);
-      } catch (e) { reject(e); }
+      } catch (e) { 
+        console.error("Error inicializando Firebase:", e);
+        reject(e); 
+      }
     }
   });
   return firebaseReady;
@@ -134,12 +143,47 @@ const GAME_DATA = {
       { q: "\"Die Lampe hängt über dem Sofa.\" – ¿Función del verbo?", options: ["Posición (¿Wo? → Dativ)","Movimiento (¿Wohin? → Akkusativ)"], answer: 0, explanation: "\"hängt\" (intransitiv) es POSICIÓN. La lámpara está colgada." },
       { q: "\"Sie stellt die Lampe über den Tisch.\" – ¿Función del verbo?", options: ["Posición (¿Wo? → Dativ)","Movimiento (¿Wohin? → Akkusativ)"], answer: 1, explanation: "\"stellt\" es MOVIMIENTO. ¿Wohin? → Akkusativ." },
     ]
+  },
+  game5: {
+    id: "game5", title: "❓ Wo oder Wohin?", category: 3,
+    description: "Identifica si la pregunta es de ubicación o dirección",
+    questions: [
+      { q: "___ ist dein Handy?", hint: "Pregunta por ubicación", options: ["Wo","Wohin","Hier","Dort"], answer: 0, explanation: "\"Wo?\" pregunta por ubicación estática. ¿Dónde está tu teléfono?" },
+      { q: "___ gehst du morgen?", hint: "Pregunta por dirección futura", options: ["Wo","Wohin","Hier","Dort"], answer: 1, explanation: "\"Wohin?\" pregunta por dirección/destino. ¿Hacia dónde vas mañana?" },
+      { q: "___ fährst du im Urlaub?", hint: "Pregunta por destino", options: ["Wo","Wohin","Da","Dorthin"], answer: 1, explanation: "\"Wohin?\" pregunta por dirección/destino de vacaciones. ¿Hacia dónde viajas?" },
+      { q: "___ wohnt deine Schwester?", hint: "Pregunta por ubicación", options: ["Wo","Wohin","Hierhin","Dahin"], answer: 0, explanation: "\"Wo?\" pregunta por ubicación de residencia. ¿Dónde vive tu hermana?" },
+      { q: "___ läuft die Katze?", hint: "Pregunta por dirección de movimiento", options: ["Wo","Wohin","Hier","Dort"], answer: 1, explanation: "\"Wohin?\" pregunta hacia dónde se dirige la gata. ¿Hacia dónde corre?" },
+      { q: "___ ist der Schlüssel?", hint: "Pregunta por ubicación de objeto", options: ["Wo","Wohin","Da","Hierhin"], answer: 0, explanation: "\"Wo?\" pregunta por ubicación del objeto. ¿Dónde está la llave?" },
+      { q: "___ bringst du die Bücher?", hint: "Pregunta por destino", options: ["Wo","Wohin","Dort","Hier"], answer: 1, explanation: "\"Wohin?\" pregunta hacia dónde llevas los libros. ¿Hacia dónde?" },
+      { q: "___ sind meine Schuhe?", hint: "Pregunta por ubicación de objetos", options: ["Wo","Wohin","Dahin","Dorthin"], answer: 0, explanation: "\"Wo?\" pregunta por ubicación de los zapatos. ¿Dónde están?" },
+    ]
+  },
+  game6: {
+    id: "game6", title: "🎯 Hier, Dort, Da & más", category: 3,
+    description: "Adverbios de lugar: estáticos vs. direccionales",
+    questions: [
+      { q: "Ich bin ___.", hint: "¿Dónde estoy? (ubicación)", options: ["hier","hierhin","dorthin","dahin"], answer: 0, explanation: "\"hier\" indica ubicación estática (¿Wo?). Estoy aquí." },
+      { q: "Komm ___!", hint: "¿Hacia dónde vienes?", options: ["hier","hierhin","dort","da"], answer: 1, explanation: "\"hierhin\" indica dirección hacia el hablante (¿Wohin?). Ven hacia aquí." },
+      { q: "Ich gehe ___.", hint: "¿Hacia dónde vas?", options: ["dort","dorthin","hier","da"], answer: 1, explanation: "\"dorthin\" indica dirección hacia un lugar (¿Wohin?). Voy hacia allá." },
+      { q: "Das Buch liegt ___.", hint: "¿Dónde está el libro?", options: ["dorthin","da","hierhin","wohin"], answer: 1, explanation: "\"da\" indica ubicación estática (¿Wo?). El libro está ahí." },
+      { q: "Stell es ___.", hint: "¿Hacia dónde ponerlo?", options: ["dort","da","hierhin","hier"], answer: 2, explanation: "\"hierhin\" indica dirección hacia el hablante. Ponlo aquí (hacia acá)." },
+      { q: "Wir wohnen ___ in der Nähe.", hint: "¿Dónde viven?", options: ["hier","hierhin","dorthin","wohin"], answer: 0, explanation: "\"hier\" indica ubicación estática. Vivimos aquí cerca." },
+      { q: "Fahr ___!", hint: "Indicando dirección", options: ["dort","dorthin","da","hier"], answer: 1, explanation: "\"dorthin\" indica dirección hacia allá. ¡Conduce hacia allá!" },
+      { q: "Er sitzt ___.", hint: "¿Dónde está sentado?", options: ["da","dahin","hierhin","dorthin"], answer: 0, explanation: "\"da\" indica ubicación estática. Él está sentado ahí." },
+    ]
   }
 };
 
 const TIME_PER_Q = 15;
 const POINTS_BASE = 1000;
-const GAME_COLORS = { game1: "#e040fb", game2: "#00e5ff", game3: "#76ff03", game4: "#ffea00" };
+const GAME_COLORS = { 
+  game1: "#e040fb", 
+  game2: "#00e5ff", 
+  game3: "#76ff03", 
+  game4: "#ffea00",
+  game5: "#ff6b35",
+  game6: "#9c27b0"
+};
 
 function calcPoints(t) { return Math.max(100, Math.round((t / TIME_PER_Q) * POINTS_BASE)); }
 function generateCode() { return Math.floor(100000 + Math.random() * 900000).toString(); }
@@ -217,14 +261,15 @@ function HomeScreen({ onStart }) {
         <div style={{ fontSize: 60, marginBottom: 2, filter: "drop-shadow(0 0 18px #e040fb66)" }}>🇩🇪</div>
         <h1 style={{ fontFamily: "'Bangers',cursive", fontSize: 50, letterSpacing: 3, margin: 0, background: "linear-gradient(135deg,#e040fb,#00e5ff,#ffea00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", textAlign: "center" }}>DeutschSpiel</h1>
         <p style={{ fontSize: 15, color: "#6b7a99", textAlign: "center", margin: "10px 0 34px", lineHeight: 1.6, maxWidth: 380 }}>
-          Aprende <strong style={{ color: "#00e5ff" }}>Wechselpräpositionen</strong> de forma divertida y competitiva
+          Aprende <strong style={{ color: "#00e5ff" }}>Wechselpräpositionen</strong> y <strong style={{ color: "#ff6b35" }}>Adverbios</strong> de forma divertida
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, width: "100%", marginBottom: 38 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, width: "100%", marginBottom: 38, maxWidth: 720 }}>
           {Object.values(GAME_DATA).map((g, i) => {
             const accent = GAME_COLORS[g.id];
+            const categoryLabel = g.category === 1 ? "Punto 1" : g.category === 2 ? "Punto 2" : "Punto 3";
             return (
               <div key={g.id} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${accent}3a`, borderRadius: 16, padding: "18px 16px", boxShadow: `0 0 18px ${accent}14`, animation: `fadeUp 0.5s ease ${i * 0.1}s both` }}>
-                <span style={{ display: "inline-block", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, color: accent, background: `${accent}18`, padding: "3px 10px", borderRadius: 20, marginBottom: 8 }}>{g.category === 1 ? "Punto 1" : "Punto 2"}</span>
+                <span style={{ display: "inline-block", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, color: accent, background: `${accent}18`, padding: "3px 10px", borderRadius: 20, marginBottom: 8 }}>{categoryLabel}</span>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginBottom: 5 }}>{g.title}</div>
                 <div style={{ fontSize: 12, color: "#5a6680", lineHeight: 1.5 }}>{g.description}</div>
               </div>
@@ -350,10 +395,11 @@ function LobbyScreen({ gameCode, isHost, players, selectedGames, onStartGame, on
               {Object.values(GAME_DATA).map(g => {
                 const sel = selectedGames.includes(g.id);
                 const accent = GAME_COLORS[g.id];
+                const categoryLabel = g.category === 1 ? "Punto 1" : g.category === 2 ? "Punto 2" : "Punto 3";
                 return (
                   <div key={g.id} onClick={() => onGameToggle(g.id)} style={{ background: sel ? `${accent}14` : "rgba(255,255,255,0.04)", border: sel ? `1px solid ${accent}55` : "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 14px", cursor: "pointer", position: "relative", transition: "all 0.2s", boxShadow: sel ? `0 0 16px ${accent}1e` : "none" }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{g.title}</div>
-                    <div style={{ fontSize: 11, color: "#4a5668", marginTop: 2 }}>{g.category === 1 ? "Punto 1" : "Punto 2"}</div>
+                    <div style={{ fontSize: 11, color: "#4a5668", marginTop: 2 }}>{categoryLabel}</div>
                     {sel && <div style={{ position: "absolute", top: 8, right: 10, width: 18, height: 18, borderRadius: "50%", background: accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#0a0e1a" }}>✓</div>}
                   </div>
                 );
@@ -767,7 +813,7 @@ export default function App() {
   const [isHost, setIsHost] = useState(false);
   const [myPlayerId, setMyPlayerId] = useState("");
   const [players, setPlayers] = useState([]);
-  const [selectedGames, setSelectedGames] = useState(["game1","game2","game3","game4"]);
+  const [selectedGames, setSelectedGames] = useState(["game1","game2","game3","game4","game5","game6"]);
   const [gamesToPlay, setGamesToPlay] = useState([]);
   const [currentGameIdx, setCurrentGameIdx] = useState(0);
   const [finalPlayers, setFinalPlayers] = useState([]);
@@ -828,6 +874,7 @@ export default function App() {
       setMyPlayerId(hostId);
       setScreen("lobby");
     } catch (e) {
+      console.error("Error en handleHost:", e);
       setFirebaseStatus("error");
     }
   }
@@ -884,7 +931,7 @@ export default function App() {
     setPlayers([]);
     setRoomCode("");
     setIsHost(false);
-    setSelectedGames(["game1","game2","game3","game4"]);
+    setSelectedGames(["game1","game2","game3","game4","game5","game6"]);
     setCurrentGameIdx(0);
   }
 

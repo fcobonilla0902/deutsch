@@ -1,30 +1,18 @@
-import React from "react";
-
+}import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 
-
-
-/* ══════════════════════════════════════════════════════════════
-   FIREBASE CONFIG  — apunta a un proyecto gratuito de Firebase.
-   El maestro debe crear un proyecto en https://console.firebase.google.com
-   y reemplazar estos valores con los suyos propios.
-   ══════════════════════════════════════════════════════════════ */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBGoh0DV80fhGArMU8rpj2kPteIlETsU9U",
   databaseURL: "https://deutsch-4479a-default-rtdb.firebaseio.com",
 };
 
-/* ──────────────────────────────────────────────
-   FIREBASE SDK (cargado dinámicamente desde CDN)
-   ────────────────────────────────────────────── */
 let firebaseApp = null;
 let db = null;
-let firebaseReady = null; // Promise que se resuelve cuando Firebase está listo
+let firebaseReady = null;
 
 function initFirebase() {
   if (firebaseReady) return firebaseReady;
   firebaseReady = new Promise((resolve, reject) => {
-    // Cargar firebase compat desde CDN
     const scripts = [
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js",
       "https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js",
@@ -40,7 +28,6 @@ function initFirebase() {
     });
     function finish() {
       try {
-        // Verificar si ya existe una app inicializada
         if (window.firebase && window.firebase.apps && window.firebase.apps.length > 0) {
           firebaseApp = window.firebase.apps[0];
           db = window.firebase.database();
@@ -49,21 +36,17 @@ function initFirebase() {
           db = window.firebase.database();
         }
         resolve(db);
-      } catch (e) { 
+      } catch (e) {
         console.error("Error inicializando Firebase:", e);
-        reject(e); 
+        reject(e);
       }
     }
   });
   return firebaseReady;
 }
 
-/* ──── helper: referencia a una sala ──── */
 function roomRef(code) { return db.ref(`rooms/${code}`); }
 
-/* ══════════════════════════════════════════════
-   KEYFRAMES + FONTS (inyectados una vez)
-   ══════════════════════════════════════════════ */
 (function injectStyles() {
   if (document.getElementById("ds-styles")) return;
   const s = document.createElement("style");
@@ -80,12 +63,15 @@ function roomRef(code) { return db.ref(`rooms/${code}`); }
     @keyframes podiumRise{ from{transform:scaleY(0);opacity:0} to{transform:scaleY(1);opacity:1} }
     @keyframes slideIn  { from{opacity:0;transform:translateX(36px)} to{opacity:1;transform:translateX(0)} }
     @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    @keyframes shimmer  { 0%{background-position:-200% center} 100%{background-position:200% center} }
+    @keyframes glow     { 0%,100%{box-shadow:0 0 12px #f97316aa} 50%{box-shadow:0 0 28px #f97316ff,0 0 48px #f9731644} }
+    @keyframes glow2    { 0%,100%{box-shadow:0 0 12px #a855f7aa} 50%{box-shadow:0 0 28px #a855f7ff,0 0 48px #a855f744} }
   `;
   document.head.appendChild(s);
 })();
 
 /* ══════════════════════════════════════════════
-   DATOS DE JUEGO
+   GAME DATA — originales + 2 nuevos (game7, game8)
    ══════════════════════════════════════════════ */
 const GAME_DATA = {
   game1: {
@@ -171,18 +157,154 @@ const GAME_DATA = {
       { q: "Fahr ___!", hint: "Indicando dirección", options: ["dort","dorthin","da","hier"], answer: 1, explanation: "\"dorthin\" indica dirección hacia allá. ¡Conduce hacia allá!" },
       { q: "Er sitzt ___.", hint: "¿Dónde está sentado?", options: ["da","dahin","hierhin","dorthin"], answer: 0, explanation: "\"da\" indica ubicación estática. Él está sentado ahí." },
     ]
-  }
+  },
+
+  /* ─────────────────────────────────────────────────────────────────
+     JUEGO 7 — "☕ ¿Einer, Eins o Eine?"
+     Pronombre indefinido: forma correcta según género (Nominativ + Akkusativ)
+     ───────────────────────────────────────────────────────────────── */
+  game7: {
+    id: "game7", title: "☕ ¿Einer, Eins o Eine?", category: 4,
+    description: "Elige la forma correcta del pronombre indefinido según el género del sustantivo.",
+    questions: [
+      {
+        q: "Brauchst du einen Espresso? – Ja, ich brauche ___.",
+        hint: "Espresso = der (masculino) → Akkusativ",
+        options: ["einen","eins","eine","welche"],
+        answer: 0,
+        explanation: "\"einen\" → Akkusativ masculino. El pronombre reemplaza a 'einen Espresso' (der Espresso)."
+      },
+      {
+        q: "Ist hier ein Messer? – Nein, hier ist ___.",
+        hint: "Messer = das (neutro) → Nominativ negativo",
+        options: ["keiner","keins","keine","keinen"],
+        answer: 1,
+        explanation: "\"keins\" → Nominativ neutro negativo. Das Messer → keins."
+      },
+      {
+        q: "Ich hätte gern eine Portion Pommes. – Hier ist ___.",
+        hint: "Portion = die (femenino) → Nominativ",
+        options: ["einer","eins","eine","welche"],
+        answer: 2,
+        explanation: "\"eine\" → Nominativ/Akkusativ femenino. Die Portion → eine."
+      },
+      {
+        q: "Gibt es hier Löffel? – Ja, hier sind ___.",
+        hint: "Löffel = Plural → pronombre plural indefinido",
+        options: ["einer","eins","eine","welche"],
+        answer: 3,
+        explanation: "\"welche\" → plural indefinido. Para el plural se usa 'welche' (algunos)."
+      },
+      {
+        q: "Ist ein Espresso übrig? – Nein, hier ist ___.",
+        hint: "Espresso = der (masculino) → Nominativ negativo",
+        options: ["keiner","keins","keine","keinen"],
+        answer: 0,
+        explanation: "\"keiner\" → Nominativ masculino negativo. Der Espresso → keiner."
+      },
+      {
+        q: "Möchtest du eine Gabel? – Ja, ich möchte ___.",
+        hint: "Gabel = die (femenino) → Akkusativ",
+        options: ["einen","eins","eine","welche"],
+        answer: 2,
+        explanation: "\"eine\" → Akkusativ femenino (forma idéntica al Nominativ). Die Gabel → eine."
+      },
+      {
+        q: "Hast du ein Messer dabei? – Nein, ich habe ___.",
+        hint: "Messer = das (neutro) → Akkusativ negativo",
+        options: ["keinen","keins","keine","keiner"],
+        answer: 1,
+        explanation: "\"keins\" → Akkusativ neutro negativo. Das Messer → keins (igual en Nom. y Akk.)."
+      },
+      {
+        q: "Ich suche Gabeln. – Hier sind ___.",
+        hint: "Gabeln = Plural → ¿positivo o negativo?",
+        options: ["welche","keine","einer","eins"],
+        answer: 0,
+        explanation: "\"welche\" → plural afirmativo (hay algunas). Si no hubiera, sería 'keine'."
+      },
+    ]
+  },
+
+  /* ─────────────────────────────────────────────────────────────────
+     JUEGO 8 — "🍽️ Nominativ oder Akkusativ?"
+     Identifica el caso del pronombre indefinido en contexto de café
+     ───────────────────────────────────────────────────────────────── */
+  game8: {
+    id: "game8", title: "🍽️ Nominativ oder Akkusativ?", category: 4,
+    description: "¿El pronombre indefinido es sujeto (Nominativ) o complemento directo (Akkusativ)?",
+    questions: [
+      {
+        q: "\"Hier ist einer.\" – ¿Qué caso es 'einer'?",
+        hint: "¿Es el sujeto de la oración o el objeto?",
+        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
+        answer: 0,
+        explanation: "\"Hier ist einer\" → 'einer' es el sujeto (Nominativ). Responde a '¿Was ist hier?' → masculino."
+      },
+      {
+        q: "\"Ich brauche einen.\" – ¿Qué caso es 'einen'?",
+        hint: "¿Qué función tiene el pronombre con 'brauchen'?",
+        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
+        answer: 1,
+        explanation: "\"brauche\" pide un objeto directo → Akkusativ masculino = 'einen'. ¿Was brauche ich?"
+      },
+      {
+        q: "\"Hier ist eins.\" – ¿Qué caso es 'eins'?",
+        hint: "Piensa: ¿quién hace la acción o qué se menciona?",
+        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
+        answer: 0,
+        explanation: "\"Hier ist eins\" → 'eins' es el sujeto (Nominativ neutro). El neutro tiene misma forma en Nom. y Akk."
+      },
+      {
+        q: "\"Ich nehme eins.\" – ¿Qué caso es 'eins'?",
+        hint: "'nehmen' → ¿qué función tiene el pronombre?",
+        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
+        answer: 1,
+        explanation: "\"nehme\" es transitivo → pide Akkusativ. 'eins' (neutro) tiene la misma forma en Nom. y Akk."
+      },
+      {
+        q: "\"Möchtest du einen Espresso? – Ja, ich möchte einen.\" – ¿Caso de 'einen'?",
+        hint: "'möchten' + objeto directo",
+        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
+        answer: 1,
+        explanation: "\"möchte\" + objeto directo → Akkusativ masculino = 'einen'. ¿Was möchte ich? → einen."
+      },
+      {
+        q: "\"Ist hier eine Portion? – Ja, hier ist eine.\" – ¿Caso de 'eine'?",
+        hint: "Después de 'ist' → ¿qué caso?",
+        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
+        answer: 0,
+        explanation: "Después de 'sein' (ist) el pronombre es sujeto → Nominativ femenino = 'eine'."
+      },
+      {
+        q: "\"Er bestellt eine Portion. Er bestellt eine.\" – ¿Caso de la segunda 'eine'?",
+        hint: "'bestellen' → ¿transitivo o intransitivo?",
+        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
+        answer: 1,
+        explanation: "\"bestellt\" es transitivo → necesita Akkusativ. Femenino Akkusativ = 'eine' (idéntico al Nominativ)."
+      },
+      {
+        q: "\"Kein Besteck? Hier ist keins.\" vs. \"Ich brauche keins.\" – ¿En cuál oración 'keins' es Akkusativ?",
+        hint: "Busca el verbo transitivo que exige objeto directo",
+        options: ["\"Hier ist keins\" (1ª oración)","\"Ich brauche keins\" (2ª oración)"],
+        answer: 1,
+        explanation: "\"brauche\" pide objeto directo → Akkusativ neutro = 'keins'. 'Hier ist keins' es Nominativ (sujeto)."
+      },
+    ]
+  },
 };
 
 const TIME_PER_Q = 15;
 const POINTS_BASE = 1000;
-const GAME_COLORS = { 
-  game1: "#e040fb", 
-  game2: "#00e5ff", 
-  game3: "#76ff03", 
+const GAME_COLORS = {
+  game1: "#e040fb",
+  game2: "#00e5ff",
+  game3: "#76ff03",
   game4: "#ffea00",
   game5: "#ff6b35",
-  game6: "#9c27b0"
+  game6: "#9c27b0",
+  game7: "#f97316",   // naranja cálido → temática café
+  game8: "#a855f7",   // violeta → gramática
 };
 
 function calcPoints(t) { return Math.max(100, Math.round((t / TIME_PER_Q) * POINTS_BASE)); }
@@ -195,7 +317,7 @@ function shuffleArray(arr) {
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
 /* ══════════════════════════════════════════════
-   DECORACIÓN: Orbs + Grid
+   DECORACIÓN
    ══════════════════════════════════════════════ */
 function FloatingOrbs() {
   const orbs = [
@@ -215,12 +337,9 @@ function GridOverlay() {
   return <div style={{ position: "absolute", inset: 0, pointerEvents: "none", backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "48px 48px" }} />;
 }
 
-/* ══════════════════════════════════════════════
-   CONFETTI
-   ══════════════════════════════════════════════ */
 function Confetti({ active }) {
   if (!active) return null;
-  const colors = ["#e040fb","#00e5ff","#ffea00","#76ff03","#ff5252","#ff9800"];
+  const colors = ["#e040fb","#00e5ff","#ffea00","#76ff03","#ff5252","#ff9800","#f97316","#a855f7"];
   return (
     <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 200, overflow: "hidden" }}>
       {Array.from({ length: 40 }, (_, i) => {
@@ -236,9 +355,6 @@ function Confetti({ active }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   SHARED COMPONENTS
-   ══════════════════════════════════════════════ */
 function BackBtn({ onClick }) {
   return (
     <button onClick={onClick} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", color: "#8a9bb5", borderRadius: 24, padding: "7px 18px", fontSize: 14, fontWeight: 700, fontFamily: "'Nunito',sans-serif", cursor: "pointer" }}
@@ -251,31 +367,59 @@ function BackBtn({ onClick }) {
 const PAGE = { minHeight: "100vh", background: "#0a0e1a", color: "#fff", position: "relative", overflow: "hidden", fontFamily: "'Nunito',sans-serif" };
 
 /* ══════════════════════════════════════════════
-   HOME
+   HOME — muestra los 8 juegos con categoría 4
    ══════════════════════════════════════════════ */
 function HomeScreen({ onStart }) {
   return (
     <div style={PAGE}>
       <FloatingOrbs /><GridOverlay />
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "52px 20px 40px", maxWidth: 680, margin: "0 auto" }}>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "52px 20px 40px", maxWidth: 780, margin: "0 auto" }}>
         <div style={{ fontSize: 60, marginBottom: 2, filter: "drop-shadow(0 0 18px #e040fb66)" }}>🇩🇪</div>
         <h1 style={{ fontFamily: "'Bangers',cursive", fontSize: 50, letterSpacing: 3, margin: 0, background: "linear-gradient(135deg,#e040fb,#00e5ff,#ffea00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", textAlign: "center" }}>DeutschSpiel</h1>
-        <p style={{ fontSize: 15, color: "#6b7a99", textAlign: "center", margin: "10px 0 34px", lineHeight: 1.6, maxWidth: 380 }}>
-          Aprende <strong style={{ color: "#00e5ff" }}>Wechselpräpositionen</strong> y <strong style={{ color: "#ff6b35" }}>Adverbios</strong> de forma divertida
+        <p style={{ fontSize: 15, color: "#6b7a99", textAlign: "center", margin: "10px 0 34px", lineHeight: 1.6, maxWidth: 460 }}>
+          Aprende <strong style={{ color: "#00e5ff" }}>Wechselpräpositionen</strong>, <strong style={{ color: "#ff6b35" }}>Adverbios</strong> e <strong style={{ color: "#f97316" }}>Indefinitpronomen</strong>
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, width: "100%", marginBottom: 38, maxWidth: 720 }}>
+
+        {/* Badge de nuevos juegos */}
+        <div style={{ background: "linear-gradient(135deg,#f9731618,#a855f718)", border: "1px solid #f9731638", borderRadius: 14, padding: "10px 20px", marginBottom: 22, display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 18 }}>✨</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#f97316" }}>¡2 nuevos juegos de Indefinitpronomen disponibles!</span>
+          <span style={{ fontSize: 18 }}>☕</span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, width: "100%", marginBottom: 38, maxWidth: 780 }}>
           {Object.values(GAME_DATA).map((g, i) => {
             const accent = GAME_COLORS[g.id];
-            const categoryLabel = g.category === 1 ? "Punto 1" : g.category === 2 ? "Punto 2" : "Punto 3";
+            const categoryLabels = { 1: "Punto 1", 2: "Punto 2", 3: "Punto 3", 4: "🆕 Indefinitpronomen" };
+            const categoryLabel = categoryLabels[g.category] || `Punto ${g.category}`;
+            const isNew = g.category === 4;
             return (
-              <div key={g.id} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${accent}3a`, borderRadius: 16, padding: "18px 16px", boxShadow: `0 0 18px ${accent}14`, animation: `fadeUp 0.5s ease ${i * 0.1}s both` }}>
-                <span style={{ display: "inline-block", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, color: accent, background: `${accent}18`, padding: "3px 10px", borderRadius: 20, marginBottom: 8 }}>{categoryLabel}</span>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginBottom: 5 }}>{g.title}</div>
-                <div style={{ fontSize: 12, color: "#5a6680", lineHeight: 1.5 }}>{g.description}</div>
+              <div key={g.id} style={{
+                background: isNew ? `${accent}0e` : "rgba(255,255,255,0.04)",
+                border: `1px solid ${accent}${isNew ? "45" : "3a"}`,
+                borderRadius: 16,
+                padding: "16px 14px",
+                boxShadow: isNew ? `0 0 24px ${accent}22, 0 0 0 1px ${accent}18` : `0 0 18px ${accent}14`,
+                animation: `fadeUp 0.5s ease ${i * 0.07}s both`,
+                position: "relative",
+                overflow: "hidden",
+              }}>
+                {isNew && (
+                  <div style={{
+                    position: "absolute", top: 8, right: 8,
+                    background: accent, color: "#0a0e1a",
+                    fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 20,
+                    textTransform: "uppercase", letterSpacing: 1,
+                  }}>NUEVO</div>
+                )}
+                <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.2, color: accent, background: `${accent}18`, padding: "3px 9px", borderRadius: 20, marginBottom: 7 }}>{categoryLabel}</span>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 4 }}>{g.title}</div>
+                <div style={{ fontSize: 11, color: "#5a6680", lineHeight: 1.5 }}>{g.description}</div>
               </div>
             );
           })}
         </div>
+
         <button onClick={onStart} style={{ background: "linear-gradient(135deg,#e040fb,#c020d9)", color: "#fff", border: "none", borderRadius: 50, padding: "16px 44px", fontSize: 18, fontWeight: 800, fontFamily: "'Nunito',sans-serif", cursor: "pointer", boxShadow: "0 4px 28px #e040fb44" }}
           onMouseDown={e => e.currentTarget.style.transform = "scale(0.95)"}
           onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
@@ -287,7 +431,7 @@ function HomeScreen({ onStart }) {
 }
 
 /* ══════════════════════════════════════════════
-   SETUP (Crear o Unirse)
+   SETUP
    ══════════════════════════════════════════════ */
 function SetupScreen({ onHost, onJoin, onBack }) {
   return (
@@ -328,15 +472,13 @@ function JoinScreen({ onJoined, onBack }) {
   async function handleJoin() {
     if (!name.trim()) { setError("Por favor ingresa tu nombre"); return; }
     if (code.trim().length !== 6) { setError("El código debe tener 6 dígitos"); return; }
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       await initFirebase();
       const snap = await roomRef(code.trim()).once("value");
       if (!snap.exists()) { setError("No se encontró esa sala. Revisa el código."); setLoading(false); return; }
       const roomData = snap.val();
       if (roomData.started) { setError("El juego ya inició. Espera a la siguiente ronda."); setLoading(false); return; }
-      // Agregar jugador
       const playerId = uid();
       await roomRef(code.trim()).child("players").child(playerId).set({
         id: playerId, name: name.trim(), color: `hsl(${Math.floor(Math.random() * 360)},70%,55%)`, score: 0, joined: Date.now()
@@ -372,43 +514,50 @@ function JoinScreen({ onJoined, onBack }) {
 }
 
 /* ══════════════════════════════════════════════
-   LOBBY (vista compartida host + jugadores)
+   LOBBY — muestra los 8 juegos agrupados
    ══════════════════════════════════════════════ */
 function LobbyScreen({ gameCode, isHost, players, selectedGames, onStartGame, onGameToggle, onBack }) {
   return (
     <div style={PAGE}>
       <FloatingOrbs /><GridOverlay />
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 580, margin: "0 auto", padding: "24px 20px 40px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 620, margin: "0 auto", padding: "24px 20px 40px" }}>
         <BackBtn onClick={onBack} />
-        {/* CÓDIGO */}
         <div style={{ background: "linear-gradient(135deg,rgba(224,64,251,0.1),rgba(0,229,255,0.07))", border: "1px solid #e040fb3a", borderRadius: 20, padding: "22px 20px", textAlign: "center", marginTop: 28, marginBottom: 28, boxShadow: "0 0 32px #e040fb14" }}>
           <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 2.5, color: "#6b7a99", marginBottom: 6 }}>Código de unión</div>
           <div style={{ fontFamily: "'Bangers',cursive", fontSize: 52, letterSpacing: 10, color: "#e040fb", margin: "4px 0", textShadow: "0 0 20px #e040fb44" }}>{gameCode}</div>
           <div style={{ fontSize: 12, color: "#4a5668" }}>Los alumnos ingresan este código para unirse automáticamente</div>
         </div>
 
-        {/* SELECTOR DE JUEGOS (solo host) */}
         {isHost && (
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, color: "#6b7a99", marginBottom: 10 }}>Selecciona los juegos</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {Object.values(GAME_DATA).map(g => {
-                const sel = selectedGames.includes(g.id);
-                const accent = GAME_COLORS[g.id];
-                const categoryLabel = g.category === 1 ? "Punto 1" : g.category === 2 ? "Punto 2" : "Punto 3";
-                return (
-                  <div key={g.id} onClick={() => onGameToggle(g.id)} style={{ background: sel ? `${accent}14` : "rgba(255,255,255,0.04)", border: sel ? `1px solid ${accent}55` : "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "12px 14px", cursor: "pointer", position: "relative", transition: "all 0.2s", boxShadow: sel ? `0 0 16px ${accent}1e` : "none" }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{g.title}</div>
-                    <div style={{ fontSize: 11, color: "#4a5668", marginTop: 2 }}>{categoryLabel}</div>
-                    {sel && <div style={{ position: "absolute", top: 8, right: 10, width: 18, height: 18, borderRadius: "50%", background: accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#0a0e1a" }}>✓</div>}
+
+            {/* Separador visual para los nuevos juegos */}
+            {[1, 2, 3, 4].map(cat => {
+              const catGames = Object.values(GAME_DATA).filter(g => g.category === cat);
+              const catLabels = { 1: "Punto 1 — Wechselpräpositionen", 2: "Punto 2 — Verbos", 3: "Punto 3 — Adverbios", 4: "✨ Indefinitpronomen (Nuevo)" };
+              const catColor = { 1: "#e040fb", 2: "#76ff03", 3: "#ff6b35", 4: "#f97316" };
+              return (
+                <div key={cat} style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, color: catColor[cat], marginBottom: 7, paddingLeft: 4 }}>{catLabels[cat]}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {catGames.map(g => {
+                      const sel = selectedGames.includes(g.id);
+                      const accent = GAME_COLORS[g.id];
+                      return (
+                        <div key={g.id} onClick={() => onGameToggle(g.id)} style={{ background: sel ? `${accent}14` : "rgba(255,255,255,0.04)", border: sel ? `1px solid ${accent}55` : "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 12px", cursor: "pointer", position: "relative", transition: "all 0.2s", boxShadow: sel ? `0 0 14px ${accent}1e` : "none" }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{g.title}</div>
+                          {sel && <div style={{ position: "absolute", top: 6, right: 8, width: 16, height: 16, borderRadius: "50%", background: accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#0a0e1a" }}>✓</div>}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
-        {/* LISTA DE JUGADORES */}
         <div style={{ marginBottom: 26 }}>
           <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, color: "#6b7a99", marginBottom: 10 }}>
             👥 Jugadores ({players.length}) {players.length < 2 && <span style={{ color: "#ff5252", fontWeight: 600, fontSize: 10, marginLeft: 6, animation: "pulse 1.4s ease infinite" }}>— se necesitan al menos 2</span>}
@@ -423,7 +572,6 @@ function LobbyScreen({ gameCode, isHost, players, selectedGames, onStartGame, on
           </div>
         </div>
 
-        {/* BOTÓN INICIAR (solo host) */}
         {isHost ? (
           <button onClick={onStartGame} disabled={selectedGames.length === 0 || players.length < 2} style={{ width: "100%", background: (selectedGames.length === 0 || players.length < 2) ? "#1e2233" : "linear-gradient(135deg,#76ff03,#4caf00)", color: (selectedGames.length === 0 || players.length < 2) ? "#4a5668" : "#0a0e1a", border: "none", borderRadius: 50, padding: "16px", fontSize: 18, fontWeight: 800, fontFamily: "'Nunito',sans-serif", cursor: (selectedGames.length === 0 || players.length < 2) ? "not-allowed" : "pointer", boxShadow: (selectedGames.length === 0 || players.length < 2) ? "none" : "0 4px 28px #76ff0333", transition: "all 0.2s" }}>
             🚀 Iniciar Juego
@@ -446,27 +594,24 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
   const [timeLeft, setTimeLeft] = useState(TIME_PER_Q);
   const [myAnswer, setMyAnswer] = useState(null);
   const [showResult, setShowResult] = useState(false);
-  // ▶ scores se inicializa desde los jugadores que ya tienen score acumulado
   const [scores, setScores] = useState(() => { const s = {}; players.forEach(p => s[p.id] = p.score || 0); return s; });
   const [placed, setPlaced] = useState([]);
   const [pool, setPool] = useState([]);
   const [dragDone, setDragDone] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const timerRef = useRef(null);
-  const listenerRef = useRef(null);
 
   const question = game.questions[qIndex];
   const isWordGame = game.id === "game2";
   const totalQ = game.questions.length;
   const isCorrect = showResult && (isWordGame ? myAnswer === 1 : myAnswer === question.answer);
+  const accent = GAME_COLORS[game.id] || "#e040fb";
 
-  // Reset on new question
   useEffect(() => {
     setMyAnswer(null); setShowResult(false); setTimeLeft(TIME_PER_Q); setShowConfetti(false); setDragDone(false);
     if (isWordGame) { setPool(shuffleArray(question.words.map((_, i) => i))); setPlaced([]); }
   }, [qIndex]);
 
-  // Timer
   useEffect(() => {
     if (showResult) return;
     timerRef.current = setInterval(() => {
@@ -475,17 +620,12 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
     return () => clearInterval(timerRef.current);
   }, [showResult, qIndex]);
 
-  // Confetti on correct
   useEffect(() => { if (showResult && isCorrect) setShowConfetti(true); }, [showResult, isCorrect]);
 
-  // ▶ Escucha los scores centrales de Firebase para sincronizar el leaderboard en tiempo real
   useEffect(() => {
     if (!db) return;
     const ref = db.ref(`rooms/${roomCode}/scores`);
-    const cb = snap => {
-      if (!snap.exists()) return;
-      setScores(prev => ({ ...prev, ...snap.val() }));
-    };
+    const cb = snap => { if (!snap.exists()) return; setScores(prev => ({ ...prev, ...snap.val() })); };
     ref.on("value", cb);
     return () => ref.off("value", cb);
   }, [roomCode]);
@@ -493,17 +633,9 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
   function submitAnswer(answerIdx, isCorrectAnswer) {
     if (!db) return;
     const points = isCorrectAnswer ? calcPoints(timeLeft) : 0;
-    // Guardar la respuesta individual
-    db.ref(`rooms/${roomCode}/answers/${game.id}_${qIndex}/${myId}`).set({
-      playerId: myId, answer: answerIdx, correct: isCorrectAnswer, points, time: timeLeft
-    });
-    // ▶ Actualizar el score acumulado CENTRALIZADO en Firebase inmediatamente
+    db.ref(`rooms/${roomCode}/answers/${game.id}_${qIndex}/${myId}`).set({ playerId: myId, answer: answerIdx, correct: isCorrectAnswer, points, time: timeLeft });
     if (isCorrectAnswer && points > 0) {
-      const ref = db.ref(`rooms/${roomCode}/scores/${myId}`);
-      // Usar transacción para evitar condiciones de carrera
-      ref.transaction(currentScore => {
-        return (currentScore || 0) + points;
-      });
+      db.ref(`rooms/${roomCode}/scores/${myId}`).transaction(currentScore => (currentScore || 0) + points);
     }
   }
 
@@ -526,14 +658,9 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
     setShowResult(true);
   }
 
-  // ▶ Al terminar el último juego → escribir "finished" y pasar a pantalla de espera
   async function handleNextQ() {
     if (qIndex + 1 >= totalQ) {
-      if (db) {
-        // Marcar que este jugador terminó este juego
-        await db.ref(`rooms/${roomCode}/finished/${game.id}/${myId}`).set(true);
-      }
-      // null = señal de "ir a waiting"
+      if (db) await db.ref(`rooms/${roomCode}/finished/${game.id}/${myId}`).set(true);
       onFinish(null);
     } else {
       setQIndex(q => q + 1);
@@ -552,16 +679,16 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
       <FloatingOrbs /><GridOverlay />
 
       {/* HEADER */}
-      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px", background: "rgba(10,14,26,0.7)", backdropFilter: "blur(8px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#6b7a99" }}>{game.title} <span style={{ color: "#3d4560" }}>— {qIndex + 1}/{totalQ}</span></div>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px", background: "rgba(10,14,26,0.7)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${accent}22` }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: accent }}>{game.title} <span style={{ color: "#3d4560" }}>— {qIndex + 1}/{totalQ}</span></div>
         <div style={{ position: "relative", width: 50, height: 50, animation: timerWarning ? "timerWarn 0.6s ease infinite" : "none" }}>
           <svg width="50" height="50" style={{ display: "block" }}>
             <circle cx="25" cy="25" r="21" fill="none" stroke="#1a1f2e" strokeWidth="5" />
-            <circle cx="25" cy="25" r="21" fill="none" stroke={timeLeft > 5 ? "#00e5ff" : "#ff5252"} strokeWidth="5"
+            <circle cx="25" cy="25" r="21" fill="none" stroke={timeLeft > 5 ? accent : "#ff5252"} strokeWidth="5"
               strokeDasharray={`${(timeLeft / TIME_PER_Q) * 131.95} 131.95`} strokeLinecap="round"
               style={{ transform: "rotate(-90deg)", transformOrigin: "center", transition: "stroke-dasharray 0.9s linear" }} />
           </svg>
-          <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: timeLeft > 5 ? "#00e5ff" : "#ff5252" }}>{timeLeft}</span>
+          <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: timeLeft > 5 ? accent : "#ff5252" }}>{timeLeft}</span>
         </div>
         <div style={{ fontSize: 16, fontWeight: 800, color: "#ffea00", textShadow: "0 0 8px #ffea0033" }}>⭐ {scores[myId] || 0}</div>
       </div>
@@ -582,7 +709,7 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
 
       {/* QUESTION */}
       <div style={{ position: "relative", zIndex: 1, padding: "18px 20px 8px", textAlign: "center" }}>
-        {question.hint && <span style={{ display: "inline-block", fontSize: 12, fontWeight: 800, color: "#e040fb", background: "#e040fb16", padding: "4px 14px", borderRadius: 20, marginBottom: 10, border: "1px solid #e040fb2e" }}>{question.hint}</span>}
+        {question.hint && <span style={{ display: "inline-block", fontSize: 12, fontWeight: 800, color: accent, background: `${accent}16`, padding: "4px 14px", borderRadius: 20, marginBottom: 10, border: `1px solid ${accent}2e` }}>{question.hint}</span>}
         <div style={{ fontSize: 21, fontWeight: 800, color: "#fff", lineHeight: 1.45 }}>{isWordGame ? "Ordena las palabras para formar la frase:" : question.q}</div>
       </div>
 
@@ -590,27 +717,24 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
       <div style={{ position: "relative", zIndex: 1, padding: "8px 18px 24px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
         {isWordGame ? (
           <>
-            {/* Zona de palabras colocadas */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "14px 16px", background: dragDone ? (myAnswer === 1 ? "rgba(118,255,3,0.07)" : "rgba(255,82,82,0.07)") : "rgba(0,229,255,0.055)", border: dragDone ? (myAnswer === 1 ? "1px solid #76ff033a" : "1px solid #ff52523a") : "2px dashed rgba(0,229,255,0.28)", borderRadius: 16, minHeight: 54, alignItems: "center", alignContent: "center", transition: "all 0.3s" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "14px 16px", background: dragDone ? (myAnswer === 1 ? "rgba(118,255,3,0.07)" : "rgba(255,82,82,0.07)") : `${accent}0d`, border: dragDone ? (myAnswer === 1 ? "1px solid #76ff033a" : "1px solid #ff52523a") : `2px dashed ${accent}44`, borderRadius: 16, minHeight: 54, alignItems: "center", alignContent: "center", transition: "all 0.3s" }}>
               {placed.length === 0 && <span style={{ fontSize: 13, color: "#3d4560", fontStyle: "italic" }}>Toca las palabras de abajo…</span>}
               {placed.map((wi, pos) => (
-                <div key={wi} onClick={() => unpickWord(pos)} style={{ background: dragDone ? (myAnswer === 1 ? "rgba(118,255,3,0.18)" : "rgba(255,82,82,0.18)") : "rgba(0,229,255,0.13)", border: dragDone ? (myAnswer === 1 ? "1px solid #76ff0355" : "1px solid #ff525255") : "1px solid rgba(0,229,255,0.38)", borderRadius: 10, padding: "8px 14px", fontSize: 15, fontWeight: 700, color: "#fff", cursor: dragDone ? "default" : "pointer", display: "flex", alignItems: "center", gap: 5, userSelect: "none", WebkitTapHighlightColor: "transparent", boxShadow: dragDone ? "none" : "0 2px 8px rgba(0,229,255,0.14)" }}>
+                <div key={wi} onClick={() => unpickWord(pos)} style={{ background: dragDone ? (myAnswer === 1 ? "rgba(118,255,3,0.18)" : "rgba(255,82,82,0.18)") : `${accent}20`, border: dragDone ? (myAnswer === 1 ? "1px solid #76ff0355" : "1px solid #ff525255") : `1px solid ${accent}55`, borderRadius: 10, padding: "8px 14px", fontSize: 15, fontWeight: 700, color: "#fff", cursor: dragDone ? "default" : "pointer", display: "flex", alignItems: "center", gap: 5, userSelect: "none", WebkitTapHighlightColor: "transparent" }}>
                   {question.words[wi]}
                   {!dragDone && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.38)" }}>✕</span>}
                 </div>
               ))}
             </div>
-            {/* Pool de palabras disponibles */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "4px 0", justifyContent: "center" }}>
               {pool.map(wi => (
-                <div key={wi} onClick={() => pickWord(wi)} style={{ background: "rgba(224,64,251,0.13)", border: "1px solid rgba(224,64,251,0.38)", borderRadius: 10, padding: "10px 18px", fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", userSelect: "none", WebkitTapHighlightColor: "transparent", boxShadow: "0 3px 12px rgba(224,64,251,0.18)", transition: "transform 0.1s" }}
+                <div key={wi} onClick={() => pickWord(wi)} style={{ background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: 10, padding: "10px 18px", fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer", userSelect: "none", WebkitTapHighlightColor: "transparent", boxShadow: `0 3px 12px ${accent}22`, transition: "transform 0.1s" }}
                   onMouseDown={e => e.currentTarget.style.transform = "scale(0.92)"}
                   onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
                   onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >{question.words[wi]}</div>
               ))}
             </div>
-            {/* Confirmar */}
             {!dragDone && placed.length === question.words.length && (
               <button onClick={handleWordSubmit} style={{ alignSelf: "center", marginTop: 6, background: "linear-gradient(135deg,#76ff03,#4caf00)", color: "#0a0e1a", border: "none", borderRadius: 50, padding: "12px 36px", fontSize: 16, fontWeight: 800, fontFamily: "'Nunito',sans-serif", cursor: "pointer", boxShadow: "0 4px 20px #76ff0333" }}>✓ Confirmar</button>
             )}
@@ -626,7 +750,7 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
             const dimmed = showResult && idx !== question.answer && idx !== myAnswer;
             return (
               <button key={idx} onClick={() => handleMCAnswer(idx)} disabled={showResult} style={{ background: bg, border: `1px solid ${bdr}`, borderRadius: 14, padding: "14px 18px", color: dimmed ? "#2e3448" : "#fff", fontSize: 16, cursor: showResult ? "default" : "pointer", display: "flex", alignItems: "center", gap: 14, textAlign: "left", boxShadow: shadow, transition: "all 0.18s", fontFamily: "'Nunito',sans-serif", fontWeight: 600, animation: `fadeUp 0.35s ease ${idx * 0.07}s both` }}
-                onMouseEnter={e => { if (!showResult) e.currentTarget.style.borderColor = "#e040fb55"; }}
+                onMouseEnter={e => { if (!showResult) e.currentTarget.style.borderColor = `${accent}55`; }}
                 onMouseLeave={e => { if (!showResult) e.currentTarget.style.borderColor = bdr; }}
                 onMouseDown={e => { if (!showResult) e.currentTarget.style.transform = "scale(0.97)"; }}
                 onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
@@ -642,7 +766,7 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
       {/* RESULTADO */}
       {showResult && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(4px)" }}>
-          <div style={{ background: "#111420", borderRadius: 24, padding: "34px 28px 30px", maxWidth: 440, width: "100%", textAlign: "center", border: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 8px 48px rgba(0,0,0,0.5)", animation: "popIn 0.35s ease both" }}>
+          <div style={{ background: "#111420", borderRadius: 24, padding: "34px 28px 30px", maxWidth: 440, width: "100%", textAlign: "center", border: `1px solid ${accent}22`, boxShadow: "0 8px 48px rgba(0,0,0,0.5)", animation: "popIn 0.35s ease both" }}>
             <div style={{ fontSize: 58, marginBottom: 4, animation: "scaleIn 0.3s ease both" }}>{isCorrect ? "✅" : myAnswer === null ? "⏰" : "❌"}</div>
             <div style={{ fontFamily: "'Bangers',cursive", fontSize: 30, letterSpacing: 2, marginBottom: 10, color: isCorrect ? "#76ff03" : myAnswer === null ? "#ffea00" : "#ff5252", textShadow: `0 0 16px ${isCorrect ? "#76ff0344" : myAnswer === null ? "#ffea0044" : "#ff525244"}` }}>
               {isCorrect ? "¡Correcto!" : myAnswer === null ? "¡Tiempo!" : "Incorrecto"}
@@ -653,7 +777,7 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
               <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4, color: "#4a5668", marginBottom: 6 }}>💡 Explicación</div>
               <div style={{ color: "#8a9bb5", fontSize: 14, lineHeight: 1.6 }}>{question.explanation}</div>
             </div>
-            <button onClick={handleNextQ} style={{ background: "linear-gradient(135deg,#e040fb,#c020d9)", color: "#fff", border: "none", borderRadius: 50, padding: "13px 36px", fontSize: 16, fontWeight: 800, fontFamily: "'Nunito',sans-serif", cursor: "pointer", boxShadow: "0 4px 24px #e040fb44" }}
+            <button onClick={handleNextQ} style={{ background: `linear-gradient(135deg,${accent},${accent}bb)`, color: "#fff", border: "none", borderRadius: 50, padding: "13px 36px", fontSize: 16, fontWeight: 800, fontFamily: "'Nunito',sans-serif", cursor: "pointer", boxShadow: `0 4px 24px ${accent}44` }}
               onMouseDown={e => e.currentTarget.style.transform = "scale(0.95)"}
               onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
             >{qIndex + 1 >= totalQ ? "Ver Resultados 🏆" : "Siguiente →"}</button>
@@ -665,7 +789,7 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
 }
 
 /* ══════════════════════════════════════════════
-   WAITING SCREEN — todos esperan antes del podio
+   WAITING SCREEN
    ══════════════════════════════════════════════ */
 function WaitingScreen({ players, roomCode, gameId, isLastGame, onAllReady }) {
   const [finishedIds, setFinishedIds] = useState([]);
@@ -673,24 +797,19 @@ function WaitingScreen({ players, roomCode, gameId, isLastGame, onAllReady }) {
   useEffect(() => {
     if (!db) return;
     const ref = db.ref(`rooms/${roomCode}/finished/${gameId}`);
-    const cb = snap => {
-      if (!snap.exists()) { setFinishedIds([]); return; }
-      setFinishedIds(Object.keys(snap.val()));
-    };
+    const cb = snap => { if (!snap.exists()) { setFinishedIds([]); return; } setFinishedIds(Object.keys(snap.val())); };
     ref.on("value", cb);
     return () => ref.off("value", cb);
   }, [roomCode, gameId]);
 
-  // Cuando todos están listos → leer scores finales y llamar onAllReady
   useEffect(() => {
     if (finishedIds.length === 0 || finishedIds.length < players.length) return;
-    // Todos terminaron
     (async () => {
       let finalScores = {};
       try {
         const snap = await db.ref(`rooms/${roomCode}/scores`).once("value");
         if (snap.exists()) finalScores = snap.val();
-      } catch (e) { /* fallback */ }
+      } catch (e) {}
       const updatedPlayers = players.map(p => ({ ...p, score: finalScores[p.id] || 0 }));
       onAllReady(updatedPlayers);
     })();
@@ -704,14 +823,8 @@ function WaitingScreen({ players, roomCode, gameId, isLastGame, onAllReady }) {
       <FloatingOrbs /><GridOverlay />
       <div style={{ position: "relative", zIndex: 1, maxWidth: 440, margin: "0 auto", padding: "80px 20px 40px", textAlign: "center" }}>
         <div style={{ fontSize: 56, marginBottom: 10, animation: "float1 2.2s ease-in-out infinite" }}>⏳</div>
-        <h2 style={{ fontFamily: "'Bangers',cursive", fontSize: 34, letterSpacing: 2, color: "#fff", margin: "0 0 8px" }}>
-          {isLastGame ? "Casi listo…" : "Entre juegos…"}
-        </h2>
-        <p style={{ color: "#4a5668", fontSize: 14, margin: "0 0 32px" }}>
-          Esperando a que todos terminen antes de continuar
-        </p>
-
-        {/* Lista de jugadores con estado */}
+        <h2 style={{ fontFamily: "'Bangers',cursive", fontSize: 34, letterSpacing: 2, color: "#fff", margin: "0 0 8px" }}>{isLastGame ? "Casi listo…" : "Entre juegos…"}</h2>
+        <p style={{ color: "#4a5668", fontSize: 14, margin: "0 0 32px" }}>Esperando a que todos terminen antes de continuar</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {done.map(p => (
             <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, background: "rgba(118,255,3,0.07)", border: "1px solid rgba(118,255,3,0.25)", borderRadius: 14, padding: "12px 18px", animation: "scaleIn 0.3s ease both" }}>
@@ -728,10 +841,7 @@ function WaitingScreen({ players, roomCode, gameId, isLastGame, onAllReady }) {
             </div>
           ))}
         </div>
-
-        <div style={{ marginTop: 28, fontSize: 13, color: "#3d4560" }}>
-          {done.length} / {players.length} listos
-        </div>
+        <div style={{ marginTop: 28, fontSize: 13, color: "#3d4560" }}>{done.length} / {players.length} listos</div>
       </div>
     </div>
   );
@@ -758,8 +868,6 @@ function PodiumScreen({ players, onPlayAgain }) {
       <div style={{ position: "relative", zIndex: 1, maxWidth: 580, margin: "0 auto", padding: "48px 20px 40px", textAlign: "center" }}>
         <h1 style={{ fontFamily: "'Bangers',cursive", fontSize: 42, letterSpacing: 3, margin: "0 0 6px", background: "linear-gradient(135deg,#ffd700,#ffea00,#ffa000)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", filter: "drop-shadow(0 0 16px #ffd70033)" }}>🏆 Resultados Finales</h1>
         <p style={{ color: "#4a5668", fontSize: 14, margin: "0 0 40px" }}>¡Excelente competencia!</p>
-
-        {/* PODIUM */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 14, marginBottom: 32, height: 280 }}>
           {podiumOrder.map(p => {
             const realRank = sorted.findIndex(s => s.id === p.id);
@@ -778,8 +886,6 @@ function PodiumScreen({ players, onPlayAgain }) {
             );
           })}
         </div>
-
-        {/* 4to y 5to */}
         {top5.length > 3 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 32 }}>
             {top5.slice(3).map((p, i) => (
@@ -792,7 +898,6 @@ function PodiumScreen({ players, onPlayAgain }) {
             ))}
           </div>
         )}
-
         <button onClick={onPlayAgain} style={{ background: "linear-gradient(135deg,#e040fb,#c020d9)", color: "#fff", border: "none", borderRadius: 50, padding: "15px 44px", fontSize: 18, fontWeight: 800, fontFamily: "'Nunito',sans-serif", cursor: "pointer", boxShadow: "0 4px 28px #e040fb44" }}
           onMouseDown={e => e.currentTarget.style.transform = "scale(0.95)"}
           onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
@@ -804,48 +909,37 @@ function PodiumScreen({ players, onPlayAgain }) {
 }
 
 /* ══════════════════════════════════════════════
-   ROOT APP — orchestrator
+   ROOT APP
    ══════════════════════════════════════════════ */
 export default function App() {
-  const [screen, setScreen] = useState("home"); // home | setup | join | lobby | game | podium
-  const [firebaseStatus, setFirebaseStatus] = useState("idle"); // idle | loading | error | ready
+  const [screen, setScreen] = useState("home");
+  const [firebaseStatus, setFirebaseStatus] = useState("idle");
   const [roomCode, setRoomCode] = useState("");
   const [isHost, setIsHost] = useState(false);
   const [myPlayerId, setMyPlayerId] = useState("");
   const [players, setPlayers] = useState([]);
-  const [selectedGames, setSelectedGames] = useState(["game1","game2","game3","game4","game5","game6"]);
+  const [selectedGames, setSelectedGames] = useState(Object.keys(GAME_DATA));
   const [gamesToPlay, setGamesToPlay] = useState([]);
   const [currentGameIdx, setCurrentGameIdx] = useState(0);
   const [finalPlayers, setFinalPlayers] = useState([]);
   const playersListenerRef = useRef(null);
 
-  // Listen to players in lobby
   useEffect(() => {
     if (!db || !roomCode || screen !== "lobby") return;
     const ref = db.ref(`rooms/${roomCode}/players`);
-    const cb = snap => {
-      if (!snap.exists()) { setPlayers([]); return; }
-      const obj = snap.val();
-      setPlayers(Object.values(obj).sort((a, b) => a.joined - b.joined));
-    };
+    const cb = snap => { if (!snap.exists()) { setPlayers([]); return; } setPlayers(Object.values(snap.val()).sort((a, b) => a.joined - b.joined)); };
     ref.on("value", cb);
     playersListenerRef.current = () => ref.off("value", cb);
     return () => { if (playersListenerRef.current) playersListenerRef.current(); };
   }, [roomCode, screen]);
 
-  // Listen for game start (non-host)
   useEffect(() => {
     if (!db || !roomCode || isHost || screen !== "lobby") return;
     const ref = db.ref(`rooms/${roomCode}/started`);
     const cb = snap => {
       if (snap.val()) {
-        const gamesSnap = db.ref(`rooms/${roomCode}/gamesToPlay`);
-        gamesSnap.once("value", s => {
-          if (s.exists()) {
-            setGamesToPlay(s.val());
-            setCurrentGameIdx(0);
-            setScreen("game");
-          }
+        db.ref(`rooms/${roomCode}/gamesToPlay`).once("value", s => {
+          if (s.exists()) { setGamesToPlay(s.val()); setCurrentGameIdx(0); setScreen("game"); }
         });
       }
     };
@@ -860,19 +954,12 @@ export default function App() {
       setFirebaseStatus("ready");
       const code = generateCode();
       const hostId = uid();
-      // Crear sala en Firebase con scores iniciales en 0 para todos
       await roomRef(code).set({
-        started: false,
-        gamesToPlay: [],
-        scores: { [hostId]: 0 },  // ▶ scores centralizados desde el inicio
-        players: {
-          [hostId]: { id: hostId, name: "Profesor (Host)", color: "#00e5ff", score: 0, isHost: true, joined: Date.now() }
-        }
+        started: false, gamesToPlay: [],
+        scores: { [hostId]: 0 },
+        players: { [hostId]: { id: hostId, name: "Profesor (Host)", color: "#00e5ff", score: 0, isHost: true, joined: Date.now() } }
       });
-      setRoomCode(code);
-      setIsHost(true);
-      setMyPlayerId(hostId);
-      setScreen("lobby");
+      setRoomCode(code); setIsHost(true); setMyPlayerId(hostId); setScreen("lobby");
     } catch (e) {
       console.error("Error en handleHost:", e);
       setFirebaseStatus("error");
@@ -880,14 +967,8 @@ export default function App() {
   }
 
   function handleJoined({ code, playerId }) {
-    // ▶ Inicializar el score del nuevo jugador en Firebase scores centralizados
-    if (db) {
-      db.ref(`rooms/${code}/scores/${playerId}`).set(0);
-    }
-    setRoomCode(code);
-    setIsHost(false);
-    setMyPlayerId(playerId);
-    setScreen("lobby");
+    if (db) db.ref(`rooms/${code}/scores/${playerId}`).set(0);
+    setRoomCode(code); setIsHost(false); setMyPlayerId(playerId); setScreen("lobby");
   }
 
   function handleGameToggle(id) {
@@ -896,46 +977,28 @@ export default function App() {
 
   async function handleStartGame() {
     const ordered = Object.keys(GAME_DATA).filter(id => selectedGames.includes(id));
-    setGamesToPlay(ordered);
-    setCurrentGameIdx(0);
-    // Escribir en Firebase para que los otros se enteran
-    if (db) {
-      await roomRef(roomCode).update({ started: true, gamesToPlay: ordered });
-    }
+    setGamesToPlay(ordered); setCurrentGameIdx(0);
+    if (db) await roomRef(roomCode).update({ started: true, gamesToPlay: ordered });
     setScreen("game");
   }
 
   function handleGameFinish(updatedPlayers) {
-    if (updatedPlayers === null) {
-      // ▶ El jugador terminó el juego actual → ir a pantalla de espera
-      setScreen("waiting");
-      return;
-    }
-    // ▶ Todos estaban listos (viene de WaitingScreen con scores reales)
+    if (updatedPlayers === null) { setScreen("waiting"); return; }
     setPlayers(updatedPlayers);
     if (currentGameIdx + 1 < gamesToPlay.length) {
-      // Limpiar el nodo "finished" de este juego para el siguiente
       if (db) db.ref(`rooms/${roomCode}/finished/${gamesToPlay[currentGameIdx]}`).remove();
-      setCurrentGameIdx(i => i + 1);
-      setScreen("game");
+      setCurrentGameIdx(i => i + 1); setScreen("game");
     } else {
-      setFinalPlayers(updatedPlayers);
-      setScreen("podium");
+      setFinalPlayers(updatedPlayers); setScreen("podium");
     }
   }
 
   function handlePlayAgain() {
-    // Limpiar sala
-    if (db && roomCode) { db.ref(`rooms/${roomCode}`).remove(); }
-    setScreen("home");
-    setPlayers([]);
-    setRoomCode("");
-    setIsHost(false);
-    setSelectedGames(["game1","game2","game3","game4","game5","game6"]);
-    setCurrentGameIdx(0);
+    if (db && roomCode) db.ref(`rooms/${roomCode}`).remove();
+    setScreen("home"); setPlayers([]); setRoomCode(""); setIsHost(false);
+    setSelectedGames(Object.keys(GAME_DATA)); setCurrentGameIdx(0);
   }
 
-  // ── RENDERS ──
   if (screen === "home") return <HomeScreen onStart={() => setScreen("setup")} />;
 
   if (screen === "setup") {
@@ -947,33 +1010,23 @@ export default function App() {
             <div style={{ fontSize: 56, marginBottom: 16 }}>⚠️</div>
             <h2 style={{ fontFamily: "'Bangers',cursive", fontSize: 28, color: "#ff5252", marginBottom: 14 }}>Firebase no configurado</h2>
             <p style={{ color: "#6b7a99", fontSize: 15, lineHeight: 1.7, marginBottom: 24 }}>
-              Para que el modo multijugador funcione necesitas crear un proyecto gratuito en <strong style={{ color: "#00e5ff" }}>Firebase</strong> y reemplazar las credenciales en el código (busca <code style={{ color: "#e040fb" }}>FIREBASE_CONFIG</code>). Sigue los pasos del README que se envió junto con el archivo.
+              Para que el modo multijugador funcione necesitas crear un proyecto gratuito en <strong style={{ color: "#00e5ff" }}>Firebase</strong> y reemplazar las credenciales en el código (busca <code style={{ color: "#e040fb" }}>FIREBASE_CONFIG</code>).
             </p>
             <button onClick={() => setFirebaseStatus("idle")} style={{ background: "linear-gradient(135deg,#e040fb,#c020d9)", color: "#fff", border: "none", borderRadius: 50, padding: "12px 32px", fontSize: 16, fontWeight: 800, fontFamily: "'Nunito',sans-serif", cursor: "pointer" }}>Intentar de nuevo</button>
           </div>
         </div>
       );
     }
-    return (
-      <SetupScreen
-        onHost={handleHost}
-        onJoin={() => setScreen("join")}
-        onBack={() => setScreen("home")}
-      />
-    );
+    return <SetupScreen onHost={handleHost} onJoin={() => setScreen("join")} onBack={() => setScreen("home")} />;
   }
 
   if (screen === "join") return <JoinScreen onJoined={handleJoined} onBack={() => setScreen("setup")} />;
 
   if (screen === "lobby") return (
     <LobbyScreen
-      gameCode={roomCode}
-      isHost={isHost}
-      players={players}
-      selectedGames={selectedGames}
-      onStartGame={handleStartGame}
-      onGameToggle={handleGameToggle}
-      onBack={handlePlayAgain}
+      gameCode={roomCode} isHost={isHost} players={players}
+      selectedGames={selectedGames} onStartGame={handleStartGame}
+      onGameToggle={handleGameToggle} onBack={handlePlayAgain}
     />
   );
 
@@ -982,12 +1035,8 @@ export default function App() {
     return (
       <GameScreen
         key={gamesToPlay[currentGameIdx] + "_" + currentGameIdx}
-        game={currentGame}
-        players={players}
-        myId={myPlayerId}
-        isHost={isHost}
-        roomCode={roomCode}
-        onFinish={handleGameFinish}
+        game={currentGame} players={players} myId={myPlayerId}
+        isHost={isHost} roomCode={roomCode} onFinish={handleGameFinish}
       />
     );
   }
@@ -997,10 +1046,8 @@ export default function App() {
     const isLastGame = currentGameIdx + 1 >= gamesToPlay.length;
     return (
       <WaitingScreen
-        players={players}
-        roomCode={roomCode}
-        gameId={currentGame.id}
-        isLastGame={isLastGame}
+        players={players} roomCode={roomCode}
+        gameId={currentGame.id} isLastGame={isLastGame}
         onAllReady={handleGameFinish}
       />
     );

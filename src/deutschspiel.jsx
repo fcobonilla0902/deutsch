@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBGoh0DV80fhGArMU8rpj2kPteIlETsU9U",
+  apiKey: "AIzaSyD1jxEk2Ose6MM5wUq0rfth2XLh6c4kecw",
   databaseURL: "https://deutsch-4479a-default-rtdb.firebaseio.com",
 };
 

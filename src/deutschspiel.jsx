@@ -66,6 +66,25 @@ function roomRef(code) { return db.ref(`rooms/${code}`); }
     @keyframes shimmer  { 0%{background-position:-200% center} 100%{background-position:200% center} }
     @keyframes glow     { 0%,100%{box-shadow:0 0 12px #f97316aa} 50%{box-shadow:0 0 28px #f97316ff,0 0 48px #f9731644} }
     @keyframes glow2    { 0%,100%{box-shadow:0 0 12px #a855f7aa} 50%{box-shadow:0 0 28px #a855f7ff,0 0 48px #a855f744} }
+
+    /* ── RESPONSIVE GAME GRID ── */
+    .ds-game-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 38px;
+    }
+    @media (max-width: 700px) {
+      .ds-game-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 380px) {
+      .ds-game-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   `;
   document.head.appendChild(s);
 })();
@@ -159,137 +178,33 @@ const GAME_DATA = {
     ]
   },
 
-  /* ─────────────────────────────────────────────────────────────────
-     JUEGO 7 — "☕ ¿Einer, Eins o Eine?"
-     Pronombre indefinido: forma correcta según género (Nominativ + Akkusativ)
-     ───────────────────────────────────────────────────────────────── */
   game7: {
     id: "game7", title: "☕ ¿Einer, Eins o Eine?", category: 4,
     description: "Elige la forma correcta del pronombre indefinido según el género del sustantivo.",
     questions: [
-      {
-        q: "Brauchst du einen Espresso? – Ja, ich brauche ___.",
-        hint: "Espresso = der (masculino) → Akkusativ",
-        options: ["einen","eins","eine","welche"],
-        answer: 0,
-        explanation: "\"einen\" → Akkusativ masculino. El pronombre reemplaza a 'einen Espresso' (der Espresso)."
-      },
-      {
-        q: "Ist hier ein Messer? – Nein, hier ist ___.",
-        hint: "Messer = das (neutro) → Nominativ negativo",
-        options: ["keiner","keins","keine","keinen"],
-        answer: 1,
-        explanation: "\"keins\" → Nominativ neutro negativo. Das Messer → keins."
-      },
-      {
-        q: "Ich hätte gern eine Portion Pommes. – Hier ist ___.",
-        hint: "Portion = die (femenino) → Nominativ",
-        options: ["einer","eins","eine","welche"],
-        answer: 2,
-        explanation: "\"eine\" → Nominativ/Akkusativ femenino. Die Portion → eine."
-      },
-      {
-        q: "Gibt es hier Löffel? – Ja, hier sind ___.",
-        hint: "Löffel = Plural → pronombre plural indefinido",
-        options: ["einer","eins","eine","welche"],
-        answer: 3,
-        explanation: "\"welche\" → plural indefinido. Para el plural se usa 'welche' (algunos)."
-      },
-      {
-        q: "Ist ein Espresso übrig? – Nein, hier ist ___.",
-        hint: "Espresso = der (masculino) → Nominativ negativo",
-        options: ["keiner","keins","keine","keinen"],
-        answer: 0,
-        explanation: "\"keiner\" → Nominativ masculino negativo. Der Espresso → keiner."
-      },
-      {
-        q: "Möchtest du eine Gabel? – Ja, ich möchte ___.",
-        hint: "Gabel = die (femenino) → Akkusativ",
-        options: ["einen","eins","eine","welche"],
-        answer: 2,
-        explanation: "\"eine\" → Akkusativ femenino (forma idéntica al Nominativ). Die Gabel → eine."
-      },
-      {
-        q: "Hast du ein Messer dabei? – Nein, ich habe ___.",
-        hint: "Messer = das (neutro) → Akkusativ negativo",
-        options: ["keinen","keins","keine","keiner"],
-        answer: 1,
-        explanation: "\"keins\" → Akkusativ neutro negativo. Das Messer → keins (igual en Nom. y Akk.)."
-      },
-      {
-        q: "Ich suche Gabeln. – Hier sind ___.",
-        hint: "Gabeln = Plural → ¿positivo o negativo?",
-        options: ["welche","keine","einer","eins"],
-        answer: 0,
-        explanation: "\"welche\" → plural afirmativo (hay algunas). Si no hubiera, sería 'keine'."
-      },
+      { q: "Brauchst du einen Espresso? – Ja, ich brauche ___.", hint: "Espresso = der (masculino) → Akkusativ", options: ["einen","eins","eine","welche"], answer: 0, explanation: "\"einen\" → Akkusativ masculino. El pronombre reemplaza a 'einen Espresso' (der Espresso)." },
+      { q: "Ist hier ein Messer? – Nein, hier ist ___.", hint: "Messer = das (neutro) → Nominativ negativo", options: ["keiner","keins","keine","keinen"], answer: 1, explanation: "\"keins\" → Nominativ neutro negativo. Das Messer → keins." },
+      { q: "Ich hätte gern eine Portion Pommes. – Hier ist ___.", hint: "Portion = die (femenino) → Nominativ", options: ["einer","eins","eine","welche"], answer: 2, explanation: "\"eine\" → Nominativ/Akkusativ femenino. Die Portion → eine." },
+      { q: "Gibt es hier Löffel? – Ja, hier sind ___.", hint: "Löffel = Plural → pronombre plural indefinido", options: ["einer","eins","eine","welche"], answer: 3, explanation: "\"welche\" → plural indefinido. Para el plural se usa 'welche' (algunos)." },
+      { q: "Ist ein Espresso übrig? – Nein, hier ist ___.", hint: "Espresso = der (masculino) → Nominativ negativo", options: ["keiner","keins","keine","keinen"], answer: 0, explanation: "\"keiner\" → Nominativ masculino negativo. Der Espresso → keiner." },
+      { q: "Möchtest du eine Gabel? – Ja, ich möchte ___.", hint: "Gabel = die (femenino) → Akkusativ", options: ["einen","eins","eine","welche"], answer: 2, explanation: "\"eine\" → Akkusativ femenino (forma idéntica al Nominativ). Die Gabel → eine." },
+      { q: "Hast du ein Messer dabei? – Nein, ich habe ___.", hint: "Messer = das (neutro) → Akkusativ negativo", options: ["keinen","keins","keine","keiner"], answer: 1, explanation: "\"keins\" → Akkusativ neutro negativo. Das Messer → keins (igual en Nom. y Akk.)." },
+      { q: "Ich suche Gabeln. – Hier sind ___.", hint: "Gabeln = Plural → ¿positivo o negativo?", options: ["welche","keine","einer","eins"], answer: 0, explanation: "\"welche\" → plural afirmativo (hay algunas). Si no hubiera, sería 'keine'." },
     ]
   },
 
-  /* ─────────────────────────────────────────────────────────────────
-     JUEGO 8 — "🍽️ Nominativ oder Akkusativ?"
-     Identifica el caso del pronombre indefinido en contexto de café
-     ───────────────────────────────────────────────────────────────── */
   game8: {
     id: "game8", title: "🍽️ Nominativ oder Akkusativ?", category: 4,
     description: "¿El pronombre indefinido es sujeto (Nominativ) o complemento directo (Akkusativ)?",
     questions: [
-      {
-        q: "\"Hier ist einer.\" – ¿Qué caso es 'einer'?",
-        hint: "¿Es el sujeto de la oración o el objeto?",
-        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
-        answer: 0,
-        explanation: "\"Hier ist einer\" → 'einer' es el sujeto (Nominativ). Responde a '¿Was ist hier?' → masculino."
-      },
-      {
-        q: "\"Ich brauche einen.\" – ¿Qué caso es 'einen'?",
-        hint: "¿Qué función tiene el pronombre con 'brauchen'?",
-        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
-        answer: 1,
-        explanation: "\"brauche\" pide un objeto directo → Akkusativ masculino = 'einen'. ¿Was brauche ich?"
-      },
-      {
-        q: "\"Hier ist eins.\" – ¿Qué caso es 'eins'?",
-        hint: "Piensa: ¿quién hace la acción o qué se menciona?",
-        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
-        answer: 0,
-        explanation: "\"Hier ist eins\" → 'eins' es el sujeto (Nominativ neutro). El neutro tiene misma forma en Nom. y Akk."
-      },
-      {
-        q: "\"Ich nehme eins.\" – ¿Qué caso es 'eins'?",
-        hint: "'nehmen' → ¿qué función tiene el pronombre?",
-        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
-        answer: 1,
-        explanation: "\"nehme\" es transitivo → pide Akkusativ. 'eins' (neutro) tiene la misma forma en Nom. y Akk."
-      },
-      {
-        q: "\"Möchtest du einen Espresso? – Ja, ich möchte einen.\" – ¿Caso de 'einen'?",
-        hint: "'möchten' + objeto directo",
-        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
-        answer: 1,
-        explanation: "\"möchte\" + objeto directo → Akkusativ masculino = 'einen'. ¿Was möchte ich? → einen."
-      },
-      {
-        q: "\"Ist hier eine Portion? – Ja, hier ist eine.\" – ¿Caso de 'eine'?",
-        hint: "Después de 'ist' → ¿qué caso?",
-        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
-        answer: 0,
-        explanation: "Después de 'sein' (ist) el pronombre es sujeto → Nominativ femenino = 'eine'."
-      },
-      {
-        q: "\"Er bestellt eine Portion. Er bestellt eine.\" – ¿Caso de la segunda 'eine'?",
-        hint: "'bestellen' → ¿transitivo o intransitivo?",
-        options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"],
-        answer: 1,
-        explanation: "\"bestellt\" es transitivo → necesita Akkusativ. Femenino Akkusativ = 'eine' (idéntico al Nominativ)."
-      },
-      {
-        q: "\"Kein Besteck? Hier ist keins.\" vs. \"Ich brauche keins.\" – ¿En cuál oración 'keins' es Akkusativ?",
-        hint: "Busca el verbo transitivo que exige objeto directo",
-        options: ["\"Hier ist keins\" (1ª oración)","\"Ich brauche keins\" (2ª oración)"],
-        answer: 1,
-        explanation: "\"brauche\" pide objeto directo → Akkusativ neutro = 'keins'. 'Hier ist keins' es Nominativ (sujeto)."
-      },
+      { q: "\"Hier ist einer.\" – ¿Qué caso es 'einer'?", hint: "¿Es el sujeto de la oración o el objeto?", options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"], answer: 0, explanation: "\"Hier ist einer\" → 'einer' es el sujeto (Nominativ). Responde a '¿Was ist hier?' → masculino." },
+      { q: "\"Ich brauche einen.\" – ¿Qué caso es 'einen'?", hint: "¿Qué función tiene el pronombre con 'brauchen'?", options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"], answer: 1, explanation: "\"brauche\" pide un objeto directo → Akkusativ masculino = 'einen'. ¿Was brauche ich?" },
+      { q: "\"Hier ist eins.\" – ¿Qué caso es 'eins'?", hint: "Piensa: ¿quién hace la acción o qué se menciona?", options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"], answer: 0, explanation: "\"Hier ist eins\" → 'eins' es el sujeto (Nominativ neutro). El neutro tiene misma forma en Nom. y Akk." },
+      { q: "\"Ich nehme eins.\" – ¿Qué caso es 'eins'?", hint: "'nehmen' → ¿qué función tiene el pronombre?", options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"], answer: 1, explanation: "\"nehme\" es transitivo → pide Akkusativ. 'eins' (neutro) tiene la misma forma en Nom. y Akk." },
+      { q: "\"Möchtest du einen Espresso? – Ja, ich möchte einen.\" – ¿Caso de 'einen'?", hint: "'möchten' + objeto directo", options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"], answer: 1, explanation: "\"möchte\" + objeto directo → Akkusativ masculino = 'einen'. ¿Was möchte ich? → einen." },
+      { q: "\"Ist hier eine Portion? – Ja, hier ist eine.\" – ¿Caso de 'eine'?", hint: "Después de 'ist' → ¿qué caso?", options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"], answer: 0, explanation: "Después de 'sein' (ist) el pronombre es sujeto → Nominativ femenino = 'eine'." },
+      { q: "\"Er bestellt eine Portion. Er bestellt eine.\" – ¿Caso de la segunda 'eine'?", hint: "'bestellen' → ¿transitivo o intransitivo?", options: ["Nominativ (sujeto)","Akkusativ (objeto directo)"], answer: 1, explanation: "\"bestellt\" es transitivo → necesita Akkusativ. Femenino Akkusativ = 'eine' (idéntico al Nominativ)." },
+      { q: "\"Kein Besteck? Hier ist keins.\" vs. \"Ich brauche keins.\" – ¿En cuál oración 'keins' es Akkusativ?", hint: "Busca el verbo transitivo que exige objeto directo", options: ["\"Hier ist keins\" (1ª oración)","\"Ich brauche keins\" (2ª oración)"], answer: 1, explanation: "\"brauche\" pide objeto directo → Akkusativ neutro = 'keins'. 'Hier ist keins' es Nominativ (sujeto)." },
     ]
   },
 };
@@ -303,8 +218,8 @@ const GAME_COLORS = {
   game4: "#ffea00",
   game5: "#ff6b35",
   game6: "#9c27b0",
-  game7: "#f97316",   // naranja cálido → temática café
-  game8: "#a855f7",   // violeta → gramática
+  game7: "#f97316",
+  game8: "#a855f7",
 };
 
 function calcPoints(t) { return Math.max(100, Math.round((t / TIME_PER_Q) * POINTS_BASE)); }
@@ -316,9 +231,6 @@ function shuffleArray(arr) {
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
-/* ══════════════════════════════════════════════
-   DECORACIÓN
-   ══════════════════════════════════════════════ */
 function FloatingOrbs() {
   const orbs = [
     { w: 200, h: 200, top: "6%", left: "-5%", bg: "radial-gradient(circle,#e040fb2a 0%,transparent 70%)", anim: "float1 7s ease-in-out infinite" },
@@ -367,27 +279,27 @@ function BackBtn({ onClick }) {
 const PAGE = { minHeight: "100vh", background: "#0a0e1a", color: "#fff", position: "relative", overflow: "hidden", fontFamily: "'Nunito',sans-serif" };
 
 /* ══════════════════════════════════════════════
-   HOME — muestra los 8 juegos con categoría 4
+   HOME
    ══════════════════════════════════════════════ */
 function HomeScreen({ onStart }) {
   return (
     <div style={PAGE}>
       <FloatingOrbs /><GridOverlay />
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "52px 20px 40px", maxWidth: 780, margin: "0 auto" }}>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "52px 20px 40px", maxWidth: 820, margin: "0 auto" }}>
         <div style={{ fontSize: 60, marginBottom: 2, filter: "drop-shadow(0 0 18px #e040fb66)" }}>🇩🇪</div>
         <h1 style={{ fontFamily: "'Bangers',cursive", fontSize: 50, letterSpacing: 3, margin: 0, background: "linear-gradient(135deg,#e040fb,#00e5ff,#ffea00)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", textAlign: "center" }}>DeutschSpiel</h1>
         <p style={{ fontSize: 15, color: "#6b7a99", textAlign: "center", margin: "10px 0 34px", lineHeight: 1.6, maxWidth: 460 }}>
           Aprende <strong style={{ color: "#00e5ff" }}>Wechselpräpositionen</strong>, <strong style={{ color: "#ff6b35" }}>Adverbios</strong> e <strong style={{ color: "#f97316" }}>Indefinitpronomen</strong>
         </p>
 
-        {/* Badge de nuevos juegos */}
         <div style={{ background: "linear-gradient(135deg,#f9731618,#a855f718)", border: "1px solid #f9731638", borderRadius: 14, padding: "10px 20px", marginBottom: 22, display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 18 }}>✨</span>
           <span style={{ fontSize: 13, fontWeight: 700, color: "#f97316" }}>¡2 nuevos juegos de Indefinitpronomen disponibles!</span>
           <span style={{ fontSize: 18 }}>☕</span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, width: "100%", marginBottom: 38, maxWidth: 780 }}>
+        {/* ── GRID RESPONSIVO: 4 cols desktop, 2 cols tablet, 1 col móvil ── */}
+        <div className="ds-game-grid" style={{ width: "100%" }}>
           {Object.values(GAME_DATA).map((g, i) => {
             const accent = GAME_COLORS[g.id];
             const categoryLabels = { 1: "Punto 1", 2: "Punto 2", 3: "Punto 3", 4: "🆕 Indefinitpronomen" };
@@ -430,9 +342,6 @@ function HomeScreen({ onStart }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   SETUP
-   ══════════════════════════════════════════════ */
 function SetupScreen({ onHost, onJoin, onBack }) {
   return (
     <div style={PAGE}>
@@ -460,9 +369,6 @@ function SetupScreen({ onHost, onJoin, onBack }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   JOIN
-   ══════════════════════════════════════════════ */
 function JoinScreen({ onJoined, onBack }) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
@@ -513,9 +419,6 @@ function JoinScreen({ onJoined, onBack }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   LOBBY — muestra los 8 juegos agrupados
-   ══════════════════════════════════════════════ */
 function LobbyScreen({ gameCode, isHost, players, selectedGames, onStartGame, onGameToggle, onBack }) {
   return (
     <div style={PAGE}>
@@ -531,8 +434,6 @@ function LobbyScreen({ gameCode, isHost, players, selectedGames, onStartGame, on
         {isHost && (
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, color: "#6b7a99", marginBottom: 10 }}>Selecciona los juegos</div>
-
-            {/* Separador visual para los nuevos juegos */}
             {[1, 2, 3, 4].map(cat => {
               const catGames = Object.values(GAME_DATA).filter(g => g.category === cat);
               const catLabels = { 1: "Punto 1 — Wechselpräpositionen", 2: "Punto 2 — Verbos", 3: "Punto 3 — Adverbios", 4: "✨ Indefinitpronomen (Nuevo)" };
@@ -586,9 +487,6 @@ function LobbyScreen({ gameCode, isHost, players, selectedGames, onStartGame, on
   );
 }
 
-/* ══════════════════════════════════════════════
-   GAME SCREEN
-   ══════════════════════════════════════════════ */
 function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
   const [qIndex, setQIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIME_PER_Q);
@@ -678,7 +576,6 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
       <Confetti active={showConfetti} />
       <FloatingOrbs /><GridOverlay />
 
-      {/* HEADER */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 18px", background: "rgba(10,14,26,0.7)", backdropFilter: "blur(8px)", borderBottom: `1px solid ${accent}22` }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: accent }}>{game.title} <span style={{ color: "#3d4560" }}>— {qIndex + 1}/{totalQ}</span></div>
         <div style={{ position: "relative", width: 50, height: 50, animation: timerWarning ? "timerWarn 0.6s ease infinite" : "none" }}>
@@ -693,7 +590,6 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
         <div style={{ fontSize: 16, fontWeight: 800, color: "#ffea00", textShadow: "0 0 8px #ffea0033" }}>⭐ {scores[myId] || 0}</div>
       </div>
 
-      {/* MINI LEADERBOARD */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", gap: 8, padding: "7px 18px", justifyContent: "center", flexWrap: "wrap" }}>
         {sorted.map((p, i) => {
           const isMe = p.id === myId;
@@ -707,13 +603,11 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
         })}
       </div>
 
-      {/* QUESTION */}
       <div style={{ position: "relative", zIndex: 1, padding: "18px 20px 8px", textAlign: "center" }}>
         {question.hint && <span style={{ display: "inline-block", fontSize: 12, fontWeight: 800, color: accent, background: `${accent}16`, padding: "4px 14px", borderRadius: 20, marginBottom: 10, border: `1px solid ${accent}2e` }}>{question.hint}</span>}
         <div style={{ fontSize: 21, fontWeight: 800, color: "#fff", lineHeight: 1.45 }}>{isWordGame ? "Ordena las palabras para formar la frase:" : question.q}</div>
       </div>
 
-      {/* ANSWERS */}
       <div style={{ position: "relative", zIndex: 1, padding: "8px 18px 24px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
         {isWordGame ? (
           <>
@@ -763,7 +657,6 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
         )}
       </div>
 
-      {/* RESULTADO */}
       {showResult && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(4px)" }}>
           <div style={{ background: "#111420", borderRadius: 24, padding: "34px 28px 30px", maxWidth: 440, width: "100%", textAlign: "center", border: `1px solid ${accent}22`, boxShadow: "0 8px 48px rgba(0,0,0,0.5)", animation: "popIn 0.35s ease both" }}>
@@ -788,9 +681,6 @@ function GameScreen({ game, players, myId, isHost, roomCode, onFinish }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   WAITING SCREEN
-   ══════════════════════════════════════════════ */
 function WaitingScreen({ players, roomCode, gameId, isLastGame, onAllReady }) {
   const [finishedIds, setFinishedIds] = useState([]);
 
@@ -847,9 +737,6 @@ function WaitingScreen({ players, roomCode, gameId, isLastGame, onAllReady }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   PODIUM
-   ══════════════════════════════════════════════ */
 function PodiumScreen({ players, onPlayAgain }) {
   const [showConfetti, setShowConfetti] = useState(false);
   useEffect(() => { const t = setTimeout(() => setShowConfetti(true), 500); return () => clearTimeout(t); }, []);
@@ -908,9 +795,6 @@ function PodiumScreen({ players, onPlayAgain }) {
   );
 }
 
-/* ══════════════════════════════════════════════
-   ROOT APP
-   ══════════════════════════════════════════════ */
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [firebaseStatus, setFirebaseStatus] = useState("idle");

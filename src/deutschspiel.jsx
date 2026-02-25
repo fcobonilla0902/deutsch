@@ -1,4 +1,4 @@
-}import React from "react";
+import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const FIREBASE_CONFIG = {
